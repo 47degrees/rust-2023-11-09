@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Rust: An Introduction</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/local.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<!-- Introduction. -->
+				<section
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+						data-background-image="assets/cuddlyferris.svg"
+						data-background-size="50%"
+						style="text-shadow: 1px 1px 3px #0000f1"
+				>
+					<p style="font-size: larger; margin-top: 2em; margin-bottom: 3em">
+						<span class="rust">Rust</span>: An Introduction
+					</p>
+					<p style="font-size: medium">
+						by <span class="rust" style="text-decoration: line-through">Ferris the Crab</span> Todd Smith<br/>
+						Rust Solution Architect<br/>
+						Xebia Functional
+					</p>
+				</section>
+
+				<!-- Where Rust is used. -->
+				<section>
+					<p>Where is <span class="rust">Rust</span> used?</p>
+					<ul>
+						<li class="fragment fade-left">Backend</li>
+						<li class="fragment fade-left">Web</li>
+						<li class="fragment fade-left">Mobile</li>
+						<li class="fragment fade-left">Embedded</li>
+						<li class="fragment fade-left">GUI</li>
+						<li class="fragment fade-left">Games</li>
+					</ul>
+				</section>
+
+				<!-- Noteworthy features of Rust. -->
+				<section>
+					<p>Noteworthy features of <span class="rust">Rust</span>:</p>
+					<div style="margin-left: 8em">
+						<ul style="display: block">
+							<li class="fragment fade-left" style="font-size: medium">Imperative execution</li>
+						</ul>
+						<ul class="fragment fade-left" style="display: block">
+							<li style="font-size: medium">Immutability by default</li>
+							<li style="font-size: medium">Algebraic data types</li>
+							<li style="font-size: medium">Higher-order functions</li>
+							<li style="font-size: medium">Type deduction (Hindley-Milner)</li>
+							<li style="font-size: medium">Traits (i.e., type classes)</li>
+							<li style="font-size: medium">Pattern matching</li>
+						</ul>
+						<ul style="display: block">
+							<li class="fragment fade-left" style="font-size: medium">Top-tier performance</li>
+							<li class="fragment fade-left" style="font-size: medium">Type safety</li>
+							<li class="fragment fade-left" style="font-size: medium">Memory safety</li>
+							<li class="fragment fade-left" style="font-size: medium">Metaprogramming (macros, auto-derive)</li>
+							<li
+									class="fragment fade-left-highlight-red"
+									style="font-size: medium; text-transform: uppercase"
+							>
+								No garbage collector!
+							</li>
+						</ul>
+					</div>
+				</section>
+
+				<!-- Timeline of Rust. -->
+				<section>
+					<p>Timeline of <span class="rust">Rust</span>:</p>
+					<ul>
+						<li class="fragment fade-left">
+							2006: Created by Graydon Hoare at Mozilla
+						</li>
+						<li class="fragment fade-left">
+							2009: Adopted officially at Mozilla
+						</li>
+						<li class="fragment fade-left">
+							2015: First stable release
+						</li>
+						<li class="fragment fade-left-highlight-red" style="text-transform: uppercase">
+							2022: Linux kernel, baby!
+						</li>
+						<li class="fragment fade-left">
+							2023: Xebia Functional opens Rust service line
+						</li>
+					</ul>
+				</section>
+
+				<!-- Memory safety segue. -->
+				<section>
+					<h1>MEMORY SAFETY</h1>
+					<p class="fragment custom fade-blur">(in C 😖)</p>
+				</section>
+
+				<!-- Splint code. -->
+				<section data-auto-animate="splint">
+					<div class="r-stack">
+						<pre><code class="language-cpp" data-trim data-line-numbers data-noescape>
+extern /*@only@*/ int* glob;
+
+/*@only@*/ int* f (
+	/*@only@*/ int* x,
+	int* y,
+	int* z
+) /*@globals glob@*/
+{
+	int* m = (int*) malloc(sizeof(int));
+	glob = y;
+	free(x);
+	*m = *x;
+	return z;
+}
+						</code></pre>
+					</div>
+					<p>Splint</p>
+				</section>
+
+				<!-- Splint feedback. -->
+				<section data-auto-animate="splint">
+					<div class="r-stack">
+						<pre style="margin-top: -40px; margin-left: -10px">
+							<code class="language-cpp" data-trim data-line-numbers data-noescape>
+extern /*@only@*/ int* glob;
+
+/*@only@*/ int* f (
+	/*@only@*/ int* x,
+	int* y,
+	int* z
+) /*@globals glob@*/
+{
+	int* m = (int*) malloc(sizeof(int));
+	glob = y;
+	free(x);
+	*m = *x;
+	return z;
+}
+							</code>
+						</pre>
+						<pre>
+							<code data-trim data-noescape style="background-color: #444444">
+> splint only.c
+only.c:10: Only storage glob (type int *) not released
+	before assignment: glob = y
+only.c:1: Storage glob becomes only
+only.c:11: Implicitly temp storage y assigned to only:
+	glob = y
+only.c:12: Dereference of possibly null pointer m: *m
+only.c:9: Storage m may become null
+only.c:12: Variable x used after being released
+only.c:11: Storage x released
+only.c:13: Implicitly temp storage z returned as only: z
+only.c:13: Fresh storage m not released before return
+only.c:9: Fresh storage m allocated
+							</code>
+						</pre>
+					</div>
+					<p>Splint</p>
+				</section>
+
+				<!-- Possession is 9/10 of the law. -->
+				<section data-auto-animate="law">
+					<a data-id="image" href="https://commons.wikimedia.org/w/index.php?curid=59794940">
+						<img
+								src="assets/Hammurabi%20Speaks.png"
+								alt="By Mbzt - Own work, CC BY 3.0, https://commons.wikimedia.org/w/index.php?curid=59794940"
+								style="width: 50%; height: auto">
+					</a>
+					<p data-id="lawgiver">Hammurabi the Lawgiver</p>
+				</section>
+
+				<!-- Possession is 9/10 of the law. -->
+				<section
+						data-auto-animate="law"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<img
+							data-id="image"
+							src="assets/Ferris%20Speaks.png"
+							alt="Ferris Speaks"
+							style="width: 50%; height: auto"
+					>
+					<p data-id="lawgiver"><span style="text-decoration: line-through">Hammurabi</span> <span class="rust">Ferris</span> the Lawgiver</p>
+				</section>
+
+				<!-- Introducing ownership. -->
+				<section>
+					<dl>
+						<dt>Ownership</dt>
+						<dd class="fragment">The <span class="rust">obligation</span> to destroy a value <em>when it goes out of scope</em>.</dd>
+					</dl>
+				</section>
+
+				<!-- Demonstrate ownership. -->
+				<section>
+					<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+struct Wrapped&lt;T&gt;(
+	T // Owner of some `T`
+);
+
+enum Either&lt;A, B&gt; {
+	A(A), // Owner of some `A`
+	B(B), // Owner of some `B`
+}
+
+fn main() {
+	let i = 5;            // Owner of `5`
+	let w = Wrapped(i);   // Owner of `Wrapped(5)`; `i` still lives
+	let a = Either::A(w); // Owner of `Either::A`; `w` destroyed by move
+	let _x = f(a);        // Owner of some `Either`; `a` destroyed by move
+} // `_x` destroyed by end of block
+
+fn f&lt;A&gt;(
+	e: Either&lt;Wrapped&lt;A&gt;, Wrapped&lt;A&gt;&gt;   // Owner of some `Either`
+) -&gt; Either&lt;Wrapped&lt;A&gt;, Wrapped&lt;A&gt;&gt; { // Returns ownership of some `Either`
+	match e {
+		Either::A(a) =&gt; // `a` is owner of `Wrapped`; `e` destroyed by move
+			Either::B(a), // Temporary is owner of `Either::B`
+		Either::B(b) =&gt; // `a` is owner of `Wrapped`; `e` destroyed by move
+			Either::A(b)  // Temporary is owner of `Either::A`
+	} // Return ownership of some `Either`
+}
+					</code></pre>
+					<p>Ownership</p>
+				</section>
+
+				<!-- Deriving Copy. -->
+				<section>
+					<div class="r-stack">
+						<img
+								class="fragment major-fade-out"
+								src="assets/Spy%20Shhh.png"
+								alt="Spy Shhh"
+								style="width: 60%; height: auto"
+								data-fragment-index="1"
+						>
+						<pre class="fragment" style="font-size: medium" data-fragment-index="1">
+							<code class="language-rust" data-trim data-line-numbers data-noescape>
+#[derive(Copy)] // Instances will be copied rather than moved
+struct Point3D {
+	x: f64,
+	y: f64,
+	z: f64
+}
+							</code>
+						</pre>
+					</div>
+					<p>Deriving the <code>Copy</code> trait</p>
+				</section>
+
+				<!-- Double free in C. -->
+				<section>
+					<pre><code class="language-cpp" data-trim data-line-numbers data-noescape>
+int* x = (int*) malloc(sizeof(some_struct)); // Allocate
+free(x);                                     // Single free - good
+free(x);                                     // Double free - bad
+					</code></pre>
+					<p>C loves double free &mdash; no error 🤦</p>
+				</section>
+
+				<!-- Double free in Rust. -->
+				<section>
+					<pre><code class="language-rust" data-trim data-line-numbers data-noescape data-ln-start-from="2">
+let x = SomeStruct::default(); // Allocate
+drop(x);                       // Single free - good
+drop(x);                       // Double free - forbidden!
+					</code></pre>
+					<pre class="console" style="font-size: medium">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> double-free v0.1.0 (/double-free)
+<span class="error">error[E0382]</span>: use of moved value: `x`
+ <span class="advice">--></span> double-free/src/main.rs:4:10
+  <span class="advice">|</span>
+<span class="advice">2 |</span>     let x = SomeStruct::default();
+  <span class="advice">|         - move occurs because `x` has type `SomeStruct`, which does not implement the `Copy` trait</span>
+<span class="advice">3 |</span>     drop(x);
+  <span class="advice">|          - value moved here</span>
+<span class="advice">4 |</span>     drop(x);
+  <span class="advice">|</span>          <span class="error">^ value used here after move</span>
+
+For more information about this error, try `rustc --explain E0382`.
+<span class="error">error</span>: could not compile `double-free` (bin "double-free") due to previous error
+					</pre>
+					<p><span class="rust">Rust</span> hates double free &mdash; compiler error 🙌</p>
+				</section>
+
+				<!-- Introducing borrowing. -->
+				<section>
+					<dl>
+						<dt>Borrow</dt>
+						<dd class="fragment">
+							<span class="rust">Access</span> to a value <em>without</em> the obligation to destroy that value when it
+							goes out of scope.
+						</dd>
+					</dl>
+				</section>
+				
+				<!-- Demonstrate borrowing. -->
+				<section data-auto-animate="borrowing">
+					<div>
+						<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+struct Wrapped&lt;T&gt;(
+	T // Owner of some `T`
+);
+
+enum Either&lt;'a, 'b, A, B&gt; {
+	A(&'a A), // Immutable borrow of some `A` with lifetime 'a
+	B(&'b B), // Immutable borrow of some `B` with lifetime 'b
+}
+
+fn main() {
+	let w = Wrapped(5);        // Owner of `Wrapped(5)`
+	let mut a = Either::A(&w); // Mutable owner of `Either`; `w` immutably borrowed
+	f(&mut a);                 // `a` mutably borrowed, updated by call
+} // `a` & `w` destroyed by end of block
+
+fn f&lt;'a, A&gt;(
+	e: &mut Either&lt;'a, 'a, A, A&gt; // Mutable borrow of some `Either`
+) {
+	*e = match e {
+		Either::A(a) =&gt; // `a` owns borrow of `A`
+			Either::B(a), // `e` becomes owner of new `Either`; `a` moved
+		Either::B(b) =&gt; // `a` owns borrow of `A`
+			Either::A(b)  // `e` becomes owner of new `Either`; `b` moved
+	}
+}
+						</code></pre>
+						<p>Borrowing</p>
+					</div>
+				</section>
+
+				<!-- Rules of borrowing. -->
+				<section data-auto-animate="borrowing">
+					<div style="width: 50%; float: left">
+						<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+struct Wrapped&lt;T&gt;(
+	T // Owner of some `T`
+);
+
+enum Either&lt;'a, 'b, A, B&gt; {
+	A(&'a A), // Immutable borrow of some `A` with lifetime 'a
+	B(&'b B), // Immutable borrow of some `B` with lifetime 'b
+}
+
+fn main() {
+	let w = Wrapped(5);        // Owner of `Wrapped(5)`
+	let mut a = Either::A(&w); // Mutable owner of `Either`; `w` immutably borrowed
+	f(&mut a);                 // `a` mutably borrowed, updated by call
+} // `a` & `w` destroyed by end of block
+
+fn f&lt;'a, A&gt;(
+	e: &mut Either&lt;'a, 'a, A, A&gt; // Mutable borrow of some `Either`
+) {
+	*e = match e {
+		Either::A(a) =&gt; // `a` owns borrow of `A`
+			Either::B(a), // `e` becomes owner of new `Either`; `a` moved
+		Either::B(b) =&gt; // `a` owns borrow of `A`
+			Either::A(b)  // `e` becomes owner of new `Either`; `b` moved
+	}
+}
+						</code></pre>
+						<p>Borrowing</p>
+					</div>
+					<div style="margin-left: 50%">
+						<p>Rules of borrowing:</p>
+						<ul>
+							<li class="fragment">
+								<em class="rust">Either</em> there may be <span class="rust">one</span> mutable burrow</li>
+							<li class="fragment">
+								<em class="rust">Or</em> there may be <span class="rust">zero</span> or <span class="rust">many</span>
+								immutable borrows
+							</li>
+							<li class="fragment">
+								References must refer to <span class="rust">live</span> values, i.e., <em>no dangling references</em>
+							</li>
+						</ul>
+					</div>
+				</section>
+
+				<!-- Cheating the borrow checker: try #1. -->
+				<section
+						data-auto-animate="naive-borrow"
+						data-background-color="#AD1210"
+				>
+					<div class="container-vertical" style="width: 50%; float: left">
+						<div class="vertically-centered">
+							<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+fn owner_dropped_while_borrowed() {
+	let outer_borrow: &amp;i32;
+	{
+		let inner_borrow: &amp;i32;
+		let owner: i32 = 10;
+		inner_borrow = &amp;owner;
+		outer_borrow = inner_borrow;
+	}
+	println!("heh, heh = {}", outer_borrow);
+}
+							</code></pre>
+							<p>Borrower, schmorrower</p>
+						</div>
+					</div>
+					<img
+						src="assets/Snidely%20Whiplash.svg"
+						alt="Snidely Whiplash, trying to break Rust"
+						style="width: 50%; height: auto">
+				</section>
+
+				<!-- Cheating the borrow checker: fail #1. -->
+				<section
+						data-auto-animate="naive-borrow"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+fn owner_dropped_while_borrowed() {
+	let outer_borrow: &amp;i32;
+	{
+		let inner_borrow: &amp;i32;
+		let owner: i32 = 10;
+		inner_borrow = &amp;owner;
+		outer_borrow = inner_borrow;
+	}
+	println!("heh, heh = {}", outer_borrow);
+}
+					</code></pre>
+					<pre class="console" style="font-size: medium">
+<span class="command">➜ cargo build</span>
+   <span class="command">Compiling</span> rust-presentation-2023-11-09 v0.1.0 (/naive-borrow)
+<span class="error">error[E0597]</span>: `owner` does not live long enough
+ <span class="advice">--></span> naive-borrow/src/main.rs:6:18
+  <span class="advice">|</span>
+<span class="advice">5 |</span>         let owner: i32 = 10;
+  <span class="advice">|             ----- binding `owner` declared here</span>
+<span class="advice">6 |</span>         inner_borrow = &amp;owner;
+  <span class="advice">|</span>                        <span class="error">^^^^^^ borrowed value does not live long enough</span>
+<span class="advice">7 |</span>         outer_borrow = inner_borrow;
+<span class="advice">8 |</span>     }
+  <span class="advice">|     - `owner` dropped here while still borrowed</span>
+<span class="advice">9 |</span>     println!("heh, heh = {}", outer_borrow);
+  <span class="advice">|                               ------------ borrow later used here</span>
+
+For more information about this error, try `rustc --explain E0597`.
+<span class="error">error</span>: could not compile `naive-borrow` (bin "naive-borrow") due to previous error
+					</pre>
+					<p>Curses, foiled again!</p>
+				</section>
+
+				<!-- Cheating the borrow checker: try #2. -->
+				<section
+						data-auto-animate="sneaky-borrow"
+						data-background-color="#AD1210"
+				>
+					<div class="container-vertical" style="width: 50%; float: left">
+						<div class="vertically-centered">
+							<pre style="font-size: medium" data-id="code">
+								<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn assign_through_borrow(
+	a: &amp;mut &amp;i32,
+	b: &amp;mut &amp;i32
+) {
+	*b = *a;
+}
+
+fn owner_dropped_while_borrowed() {
+	let outer_owner = 10;
+	let mut outer_borrow = &amp;outer_owner;
+	{
+		let inner_owner = 10;
+		let mut inner_borrow = &amp;inner_owner;
+		assign_through_borrow(
+			&amp;mut inner_borrow,
+			&amp;mut outer_borrow
+		);
+	}
+	println!("heh, heh = {}", outer_borrow);
+}
+								</code>
+							</pre>
+							<p>Borrower, schmorrower</p>
+						</div>
+					</div>
+					<img
+							src="assets/Snidely%20Whiplash.svg"
+							alt="Snidely Whiplash, trying to break Rust"
+							style="width: 50%; height: auto">
+				</section>
+
+				<!-- Cheating the borrow checker: fail #2. -->
+				<section
+						data-auto-animate="sneaky-borrow"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn assign_through_borrow(
+	a: &amp;mut &amp;i32,
+	b: &amp;mut &amp;i32
+) {
+	*b = *a;
+}
+						</code>
+					</pre>
+					<pre class="console" style="font-size: medium">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> sneaky-borrow v0.1.0 (/sneaky-borrow)
+<span class="error">error</span>: lifetime may not live long enough
+ <span class="advice">--></span> sneaky-borrow/src/main.rs:5:2
+  <span class="advice">|</span>
+<span class="advice">2 |</span>     a: &amp;mut &amp;i32,
+  <span class="advice">|             - let's call the lifetime of this reference `'1`</span>
+<span class="advice">3 |</span>     b: &amp;mut &amp;i32
+  <span class="advice">|             - let's call the lifetime of this reference `'2`</span>
+<span class="advice">4 |</span> ) {
+<span class="advice">5 |</span>     *b = *a;
+  <span class="advice">|</span>     <span class="error">^^^^^^^ assignment requires that `'1` must outlive `'2`</span>
+  <span class="advice">|</span>
+<span class="help">help</span>: consider introducing a named lifetime parameter
+  <span class="advice">|</span>
+<span class="advice">1</span> <span class="note">~</span> fn assign_through_borrow&lt;<span class="note">'a</span>>(
+<span class="advice">2</span> <span class="note">~</span>     a: &amp;mut &amp;<span class="note">'a</span> i32,
+<span class="advice">3</span> <span class="note">~</span>     b: &amp;mut &amp;<span class="note">'a</span> i32
+  <span class="advice">|</span>
+
+<span class="error">error</span>: could not compile `sneaky-borrow` (bin "sneaky-borrow") due to previous error
+					</pre>
+					<p>Curses, foiled again!</p>
+				</section>
+
+				<!-- Cheating the borrow checker: try #3. -->
+				<section
+						data-auto-animate="sneaky-borrow"
+						data-background-color="#AD1210"
+				>
+					<div class="container-vertical" style="width: 50%; float: left">
+						<div class="vertically-centered">
+							<pre style="font-size: medium" data-id="code">
+								<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn annotated_assign_through_borrow&lt;
+	'a: 'b,
+	'b
+&gt;(
+	a: &amp;mut &amp;'a i32,
+	b: &amp;mut &amp;'b i32,
+) {
+	*b = *a;
+}
+
+fn owner_dropped_while_borrowed() {
+	let outer_owner = 10;
+	let mut outer_borrow = &amp;outer_owner;
+	{
+		let inner_owner = 10;
+		let mut inner_borrow = &amp;inner_owner;
+		annotated_assign_through_borrow(
+			&amp;mut inner_borrow,
+			&amp;mut outer_borrow
+		);
+	}
+	println!("heh, heh = {}", outer_borrow);
+}
+								</code>
+							</pre>
+							<p>Borrower, schmorrower</p>
+						</div>
+					</div>
+					<img
+							src="assets/Snidely%20Whiplash.svg"
+							alt="Snidely Whiplash, trying to break Rust"
+							style="width: 50%; height: auto">
+				</section>
+
+				<!-- Cheating the borrow checker: fail #3. -->
+				<section
+						data-auto-animate="sneaky-borrow"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn owner_dropped_while_borrowed() {
+	let outer_owner = 10;
+	let mut outer_borrow = &amp;outer_owner;
+	{
+		let inner_owner = 10;
+		let mut inner_borrow = &amp;inner_owner;
+		annotated_assign_through_borrow(
+			&amp;mut inner_borrow,
+			&amp;mut outer_borrow
+		);
+	}
+	println!("heh, heh = {}", outer_borrow);
+}
+						</code>
+					</pre>
+					<pre class="console" style="font-size: medium">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> sneaky-borrow-with-lifetime v0.1.0 (/sneaky-borrow-with-lifetime)
+<span class="error">error[E0597]</span>: `inner_owner` does not live long enough
+  <span class="advice">--></span> sneaky-borrow-with-lifetime/src/main.rs:13:26
+   <span class="advice">|</span>
+<span class="advice">12 |</span>         let inner_owner = 10;
+   <span class="advice">|             ----------- binding `inner_owner` declared here</span>
+<span class="advice">13 |</span>         let mut inner_borrow = &amp;inner_owner;
+   <span class="advice">|</span>                                <span class="error">^^^^^^^^^^^^ borrowed value does not live long enough</span>
+<span class="advice">...</span>
+<span class="advice">18 |</span>     }
+   <span class="advice">|     - `inner_owner` dropped here while still borrowed</span>
+<span class="advice">19 |</span>     println!("heh, heh = {}", outer_borrow);
+   <span class="advice">|                               ------------ borrow later used here</span>
+
+For more information about this error, try `rustc --explain E0597`.
+<span class="error">error</span>: could not compile `sneaky-borrow-with-lifetime` (bin "sneaky-borrow-with-lifetime")
+due to previous error
+					</pre>
+					<p>Curses, foiled again!</p>
+				</section>
+
+				<!-- Box. -->
+				<section>
+					<pre><code class="language-rust" data-trim data-noescape>
+// Excerpted from standard library.
+pub struct Box&lt;
+		// Any type, even if size is statically unknown
+    T: ?Sized,
+		// To support "placement new"
+    A: Allocator = Global
+&gt;(Unique&lt;T&gt;, A); // `Unique` means "sole owner"
+					</code></pre>
+					<img
+							src="assets/Box.svg"
+							alt="Graph"
+							style="width: 33%; height: auto"/>
+					<p><code class="rust">Box</code></p>
+				</section>
+
+				<!-- Introduction to shared ownership. -->
+				<section>
+					<img
+							src="assets/Graph%20no%20Rc.svg"
+							alt="Graph"
+							style="width: 33%; height: auto"/>
+					<p>Who owns <code class="rust">E</code>?</p>
+				</section>
+
+				<!-- Rc. -->
+				<section>
+					<pre><code class="language-rust" data-trim data-noescape>
+// Simplified from standard library.
+pub struct RcInner&lt;T: ?Sized&gt; {
+	// Interiorly mutable strong count
+	strong: Cell&lt;usize&gt;,
+	// Interiorly mutable weak count (for cycle breaking)
+	weak: Cell&lt;usize&gt;,
+	// The shared value
+	value: T
+}
+
+pub struct Rc&lt;T: ?Sized&gt; {
+	// The shared value, plus reference counts
+	inner: Box&lt;RcInner&lt;T&gt;&gt;
+}
+					</code></pre>
+					<p>Simplified <code class="rust">Rc</code></p>
+				</section>
+
+				<!-- Graph with Rc. -->
+				<section>
+					<pre><code class="language-rust" data-trim data-noescape>
+pub struct GraphNode&lt;T&gt; {
+	// The payload
+	value: T,
+	// The vector of successors
+	successors: Vec&lt;Rc&lt;GraphNode&lt;T&gt;&gt;&gt;
+}
+					</code></pre>
+					<img
+						src="assets/Graph%20With%20Rc.svg"
+						alt="Graph with Rc"
+						style="width: 33%; height: auto"/>
+				</section>
+
+				<!-- Arc. -->
+				<section>
+					<pre><code class="language-rust" data-trim data-noescape>
+// Simplified from standard library.
+pub struct ArcInner&lt;T: ?Sized&gt; {
+	// Atomically mutable strong count
+	strong: atomic::AtomicUsize,
+	// Atomically mutable weak count (for cycle breaking)
+	weak: atomic::AtomicUsize,
+	// The shared value
+	value: T
+}
+
+pub struct Arc&lt;T: ?Sized&gt; {
+	// The shared value, plus reference counts
+	inner: Box&lt;ArcInner&lt;T&gt;&gt;
+}
+					</code></pre>
+					<p>Simplified <code class="rust">Arc</code></p>
+				</section>
+
+				<!-- Shared immutable data with Arc. -->
+				<section data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)">
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Arc&lt;i32&gt; = Arc::new(10);
+	let copy = Arc::clone(&shared);
+	let forked = spawn(move || {
+		println!("first thread: {}", *copy);
+	});
+	forked.join().unwrap();
+	println!("main thread: {}", *shared);
+}
+						</code>
+					</pre>
+					<p>Share immutable data with <code class="rust">Arc</code></p>
+				</section>
+
+				<!-- Shared mutable data with Arc. -->
+				<section data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)">
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Arc&lt;Mutex&lt;i32&gt;&gt; = Arc::new(Mutex::new(0));
+	let join_handles: Vec&lt;JoinHandle&lt;()&gt;&gt; = (1..=10)
+		.map(|_| { // Don't care about the subscript, only running 10 times
+			let copy = Arc::clone(&shared);
+			spawn(move || {
+				let mut guarded_value: MutexGuard&lt;i32&gt; = copy.lock().unwrap();
+				*guarded_value += 1;
+			})
+		})
+		.collect();  // Iterators are lazy, so must collect
+	// Wait for all threads to complete.
+	join_handles.into_iter().for_each(|h| h.join().unwrap());
+	println!("{}", *shared.lock().unwrap()); // Prints "10\n"
+}
+						</code>
+					</pre>
+					<p>Share mutable data with <code class="rust">Arc&lt;Mutex&gt;</code></p>
+				</section>
+
+				<!-- Cheating the borrow checker: try #4. -->
+				<section
+						data-auto-animate="concurrent-rc"
+						data-background-color="#AD1210"
+				>
+					<div class="container-vertical" style="width: 50%; float: left">
+						<div class="vertically-centered">
+							<pre style="font-size: medium" data-id="code">
+								<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Rc&lt;i32&gt; = Rc::new(10);
+	let copy = Rc::clone(&shared);
+	let forked = spawn(move ||
+		{
+			println!("first thread: {}", *copy);
+		}
+	);
+	forked.join().unwrap();
+	println!("main thread: {}", *shared);
+}
+								</code>
+							</pre>
+							<p>Borrower, schmorrower</p>
+						</div>
+					</div>
+					<img
+							src="assets/Snidely%20Whiplash.svg"
+							alt="Snidely Whiplash, trying to break Rust"
+							style="width: 50%; height: auto">
+				</section>
+
+				<!-- Cheating the borrow checker: fail #4. -->
+				<section
+						data-auto-animate="concurrent-rc"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Rc&lt;i32&gt; = Rc::new(10);
+	let copy = Rc::clone(&shared);
+	let forked = spawn(move ||
+		{
+			println!("first thread: {}", *copy);
+		}
+	);
+	forked.join().unwrap();
+	println!("main thread: {}", *shared);
+}
+						</code>
+					</pre>
+					<pre class="console" style="font-size: x-small">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> concurrent-rc v0.1.0 (/concurrent-rc)
+<span class="command">error[E0277]</span>: `Rc&lt;i32&gt;` cannot be sent between threads safely
+   <span class="advice">--></span>; concurrent-rc/src/main.rs:7:21
+    <span class="advice">|</span>
+<span class="advice">7   |</span>       let forked = spawn(move ||
+<span class="advice">    |                    -----</span> <span class="error">^</span><span class="advice">------</span>
+<span class="advice">    |                    |</span>     <span class="error">|</span>
+    <span class="advice">|</span>  <span class="error">__________________</span><span class="advice">|</span><span class="error">_____</span><span class="advice">within this `[closure@concurrent-rc/src/main.rs:7:21: 7:28]`</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">|</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">required by a bound introduced by this call</span>
+<span class="advice">8   |</span> <span class="error">|</span>         {
+<span class="advice">9   |</span> <span class="error">|</span>             println!("first thread: {}", *copy);
+<span class="advice">10  |</span> <span class="error">|</span>         }
+    <span class="advice">|</span> <span class="error">|_________^ `Rc&lt;i32&gt;` cannot be sent between threads safely</span>
+    <span class="advice">|</span>
+    <span class="advice">=</span> <strong>help</strong>: within `[closure@concurrent-rc/src/main.rs:7:21: 7:28]`, the trait `Send` is not implemented for `Rc&lt;i32&gt;`
+<span class="note">note</span>: required because it's used within this closure
+   <span class="advice">--></span> concurrent-rc/src/main.rs:7:21
+    <span class="advice">|</span>
+<span class="advice">7   |</span>     let forked = spawn(move ||
+    <span class="advice">|</span>                        <span class="note">^^^^^^^</span>
+<span class="note">note</span>: required by a bound in `spawn`
+   <span class="advice">--></span> /lib/rustlib/src/rust/library/std/src/thread/mod.rs:680:8
+    <span class="advice">|</span>
+<span class="advice">680 |</span>     F: Send + 'static,
+    <span class="advice">|</span>        <span class="note">^^^^ required by this bound in `spawn`</span>
+
+For more information about this error, try `rustc --explain E0277`.
+<span class="error">error</span>: could not compile `concurrent-rc` (bin "concurrent-rc") due to previous error
+					</pre>
+					<p>Curses, foiled again!</p>
+				</section>
+
+				<!-- Introduction to traits. -->
+				<section>
+					<p>Traits in <span class="rust">Rust:</span></p>
+					<ul>
+						<li class="fragment" data-fragment-index="1">Like interfaces in Java, Kotlin</li>
+						<li class="fragment" data-fragment-index="1">Like traits in Scala</li>
+						<li class="fragment" data-fragment-index="1">Like type classes in Haskell</li>
+						<li class="fragment" data-fragment-index="2">May prescribe one or more methods</li>
+						<li class="fragment" data-fragment-index="3">May not specify state</li>
+						<li class="fragment" data-fragment-index="3">May provide default implementations of methods</li>
+					</ul>
+				</section>
+
+				<!-- The Send trait. -->
+				<section>
+					<dl>
+						<dt><code class="rust">Send</code></dt>
+						<dd class="fragment">
+							Auto trait that denotes types that can be <span class="rust">moved</span> across thread boundaries<br>
+							<em class="fragment">(because they are not subject to data races)</em>
+						</dd>
+					</dl>
+				</section>
+
+				<!-- Cheating the borrow checker: fail #4, redux. -->
+				<section
+						data-auto-animate="concurrent-rc"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Rc&lt;i32&gt; = Rc::new(10);
+	let copy = Rc::clone(&shared);
+	let forked = spawn(move ||
+		{
+			println!("first thread: {}", *copy);
+		}
+	);
+	forked.join().unwrap();
+	println!("main thread: {}", *shared);
+}
+						</code>
+					</pre>
+					<pre class="console" style="font-size: x-small">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> concurrent-rc v0.1.0 (/concurrent-rc)
+<span class="command">error[E0277]</span>: `Rc&lt;i32&gt;` cannot be sent between threads safely
+   <span class="advice">--></span>; concurrent-rc/src/main.rs:7:21
+    <span class="advice">|</span>
+<span class="advice">7   |</span>       let forked = spawn(move ||
+<span class="advice">    |                    -----</span> <span class="error">^</span><span class="advice">------</span>
+<span class="advice">    |                    |</span>     <span class="error">|</span>
+    <span class="advice">|</span>  <span class="error">__________________</span><span class="advice">|</span><span class="error">_____</span><span class="advice">within this `[closure@concurrent-rc/src/main.rs:7:21: 7:28]`</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">|</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">required by a bound introduced by this call</span>
+<span class="advice">8   |</span> <span class="error">|</span>         {
+<span class="advice">9   |</span> <span class="error">|</span>             println!("first thread: {}", *copy);
+<span class="advice">10  |</span> <span class="error">|</span>         }
+    <span class="advice">|</span> <span class="error">|_________^ `Rc&lt;i32&gt;` cannot be sent between threads safely</span>
+    <span class="advice">|</span>
+    <span class="advice">=</span> <strong>help</strong>: within `[closure@concurrent-rc/src/main.rs:7:21: 7:28]`, the trait `Send` is not implemented for `Rc&lt;i32&gt;`
+<span class="note">note</span>: required because it's used within this closure
+   <span class="advice">--></span> concurrent-rc/src/main.rs:7:21
+    <span class="advice">|</span>
+<span class="advice">7   |</span>     let forked = spawn(move ||
+    <span class="advice">|</span>                        <span class="note">^^^^^^^</span>
+<span class="note">note</span>: required by a bound in `spawn`
+   <span class="advice">--></span> /lib/rustlib/src/rust/library/std/src/thread/mod.rs:680:8
+    <span class="advice">|</span>
+<span class="advice">680 |</span>     F: Send + 'static,
+    <span class="advice">|</span>        <span class="note">^^^^ required by this bound in `spawn`</span>
+
+For more information about this error, try `rustc --explain E0277`.
+<span class="error">error</span>: could not compile `concurrent-rc` (bin "concurrent-rc") due to previous error
+					</pre>
+					<p>🤔</p>
+				</section>
+
+				<!-- Cheating the borrow checker: try #5. -->
+				<section
+						data-auto-animate="concurrent-rc"
+						data-background-color="#AD1210"
+				>
+					<div class="container-vertical" style="width: 50%; float: left">
+						<div class="vertically-centered">
+							<pre style="font-size: medium" data-id="code">
+								<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Arc&lt;Rc&lt;i32&gt;&gt; =
+		Arc::new(Rc::new(10));
+	let copy = Arc::clone(&shared);
+	let forked = spawn(move ||
+		{
+			println!("first thread: {}", **copy);
+		}
+	);
+	forked.join().unwrap();
+	println!("main thread: {}", **shared);
+}
+								</code>
+							</pre>
+							<p>Borrower, schmorrower</p>
+						</div>
+					</div>
+					<img
+							src="assets/Snidely%20Whiplash.svg"
+							alt="Snidely Whiplash, trying to break Rust"
+							style="width: 50%; height: auto">
+				</section>
+
+				<!-- Cheating the borrow checker: fail #5. -->
+				<section
+						data-auto-animate="concurrent-rc"
+						data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)"
+				>
+					<pre style="font-size: medium" data-id="code">
+						<code class="language-rust" data-trim data-line-numbers data-noescape>
+fn main() {
+	let shared: Arc&lt;Rc&lt;i32&gt;&gt; =
+		Arc::new(Rc::new(10));
+	let copy = Arc::clone(&shared);
+	let forked = spawn(move ||
+		{
+			println!("first thread: {}", **copy);
+		}
+	);
+	forked.join().unwrap();
+	println!("main thread: {}", **shared);
+}
+						</code>
+					</pre>
+					<pre class="console" style="font-size: x-small">
+<span class="command">➜ cargo</span> build
+   <span class="command">Compiling</span> concurrent-rc-in-arc v0.1.0 (/concurrent-rc-in-arc)
+<span class="error">error[E0277]</span>: `Rc&lt;i32&gt;` cannot be shared between threads safely
+   <span class="advice">--></span> concurrent-rc-in-arc/src/main.rs:8:21
+    <span class="advice">|</span>
+<span class="advice">8   |</span>       let forked = spawn(move ||
+    <span class="advice">|</span>  <span class="error">__________________</span><span class="advice">-----</span><span class="error">_^</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">|</span>
+    <span class="advice">|</span> <span class="error">|</span>                  <span class="advice">required by a bound introduced by this call</span>
+<span class="advice">9   |</span> <span class="error">|</span>         {
+<span class="advice">10  |</span> <span class="error">|</span>             println!("first thread: {}", **copy);
+<span class="advice">11  |</span> <span class="error">|</span>         }
+    <span class="advice">|</span> <span class="error">|_________^ `Rc&lt;i32&gt;` cannot be shared between threads safely</span>
+    <span class="advice">|</span>
+    <span class="advice">=</span> <strong>help</strong>: the trait `Sync` is not implemented for `Rc&lt;i32&gt;`
+    <span class="advice">=</span> <strong>note</strong>: required for `Arc&lt;Rc&lt;i32&gt;&gt;` to implement `Send`
+<span class="note">note</span>: required because it's used within this closure
+   <span class="advice">--></span> concurrent-rc-in-arc/src/main.rs:8:21
+    <span class="advice">|</span>
+<span class="advice">8   |</span>     let forked = spawn(move ||
+    <span class="advice">|</span>                        <span class="note">^^^^^^^</span>
+<span class="note">note</span>: required by a bound in `spawn`
+   <span class="advice">--></span> /lib/rustlib/src/rust/library/std/src/thread/mod.rs:680:8
+    <span class="advice">|</span>
+<span class="advice">680 |</span>     F: Send + 'static,
+    <span class="advice">|</span>        <span class="note">^^^^ required by this bound in `spawn`</span>
+    <span class="rust">…</span>
+
+For more information about this error, try `rustc --explain E0277`.
+<span class="error">error</span>: could not compile `concurrent-rc-in-arc` (bin "concurrent-rc-in-arc") due to previous error
+					</pre>
+					<p>Curses, foiled again!</p>
+				</section>
+
+				<!-- The Sync trait. -->
+				<section>
+					<dl>
+						<dt><code class="rust">Sync</code></dt>
+						<dd class="fragment">
+							Auto trait that denotes types that can be <span class="rust">shared</span> across thread boundaries<br>
+							<em class="fragment">(because they are not subject to data races)</em>
+						</dd>
+					</dl>
+				</section>
+
+				<!-- Rules for Send and Sync. -->
+				<section data-auto-animate="rules-send-sync">
+					<div class="r-stack">
+						<img
+								class="fragment major-fade-out"
+								src="assets/Spy%20Shhh.png"
+								alt="Spy Shhh"
+								style="width: 60%; height: auto"
+								data-fragment-index="1">
+						<div>
+							<p class="fragment" data-fragment-index="1">
+								Rules for <code class="rust">Send</code> and <code class="rust">Sync</code>
+							</p>
+							<p class="fragment" style="margin-top: -20px; font-size: medium" data-fragment-index="1">
+								(which I am <em>definitely</em> not talking about in this presentation)
+							</p>
+							<ul class="fragment" style="font-size: large" data-fragment-index="1">
+								<li>A type is <code class="rust">Send</code> <em>iff</em> it is safe to move to another thread.</li>
+								<li>A type is <code class="rust">Sync</code> <em>iff</em> it is safe to share with other threads.</li>
+								<li>
+									<code class="rust">T</code> is <code class="rust">Sync</code> <em>iff</em> <code class="rust">&T</code>
+									is <code class="rust">Send</code>.
+								</li>
+								<li>
+									A compound type that is composed entirely of <code class="rust">Send</code> or
+									<code class="rust">Sync</code> types, then it is <code class="rust">Send</code> or
+									<code class="rust">Sync</code>.
+								</li>
+								<li>
+									Raw pointers (<code class="rust">*const T</code> and <code class="rust">*mut T</code> are neither
+									<code class="rust">Send</code> nor <code class="rust">Sync</code>.
+								</li>
+								<li>
+									<code class="rust">Cell</code>, <code class="rust">RefCell</code>, and
+									<code class="rust">UnsafeCell</code> are not <code class="rust">Sync</code>.
+								</li>
+								<li>
+									<code class="rust">Rc</code> is not <code class="rust">Send</code> or <code class="rust">Sync</code>! 😀
+								</li>
+							</ul>
+						</div>
+					</div>
+				</section>
+
+				<!-- Memory safety in Rust. -->
+				<section data-background-gradient="linear-gradient(to bottom, #FF474C, #8B47AC)">
+					<h1>MEMORY SAFETY<br> <code>==</code><br> THREAD SAFETY</h1>
+					<p class="fragment custom fade-blur">(in Rust 🦀 !)</p>
+				</section>
+
+				<!-- Official Rust resources. -->
+				<section data-visibility="uncounted">
+					<p>Official <span class="rust">Rust</span> resources:</p>
+					<ul>
+						<li>
+							<a href="https://www.rust-lang.org/" target="_blank" rel="noopener noreferrer">
+								Rust: Official Website
+							</a>
+						</li>
+						<li>
+							<a href="https://crates.io/" target="_blank" rel="noopener noreferrer">
+								Crates.io: Official Crate Registry
+							</a>
+						</li>
+						<li>
+							<a href="https://doc.rust-lang.org/book/" target="_blank" rel="noopener noreferrer">
+								The Rust Programming Language: Online Book
+							</a>
+						</li>
+						<li>
+							<a href="https://doc.rust-lang.org/reference/" target="_blank" rel="noopener noreferrer">
+								The Rust Reference: Online Book
+							</a>
+						</li>
+						<li>
+							<a href="https://doc.rust-lang.org/nomicon/" target="_blank" rel="noopener noreferrer">
+								The Rustonomicon: Online Book
+							</a>
+						</li>
+						<li>
+							<a href="https://users.rust-lang.org/" target="_blank" rel="noopener noreferrer">
+								Users forum
+							</a>
+						</li>
+					</ul>
+				</section>
+
+				<!-- Community Rust resources. -->
+				<section data-visibility="uncounted">
+					<p>Community <span class="rust">Rust</span> resources:</p>
+					<ul>
+						<li>
+							<a href="https://discord.com/invite/rust" target="_blank" rel="noopener noreferrer">
+								Rust on Discord
+							</a>
+						</li>
+						<li>
+							<a href="https://github.com/omarabid/rust-companies" target="_blank" rel="noopener noreferrer">
+								Companies using Rust
+							</a>
+						</li>
+						<li>
+							<a href="https://github.com/rust-unofficial/awesome-rust" target="_blank" rel="noopener noreferrer">
+								Awesome Rust: Curated Crate List
+							</a>
+						</li>
+					</ul>
+				</section>
+
+				<!-- Internal Rust resources. -->
+				<section data-visibility="uncounted">
+					<p>Internal Xebia Functional <span class="rust">Rust</span> resources:</p>
+					<ul>
+						<li>
+							<a
+									href="https://xebiagroup.sharepoint.com/:w:/r/sites/xf/_layouts/15/Doc.aspx?sourcedoc=%7B2E6B8E20-1458-4F78-AF2F-7F6DCDBBC2AB%7D&file=Third-Party%20Crates.docx&action=default&mobileredirect=true"
+									target="_blank"
+									rel="noopener noreferrer"
+							>
+								Crates Used by Our Team
+							</a>
+						</li>
+						<li>
+							<a href="https://fortyseven.slack.com/archives/CDZU8MC3F" target="_blank" rel="noopener noreferrer">
+								#rust: Rust on Slack
+							</a>
+						</li>
+						<li>
+							<a href="https://xebiagroup.sharepoint.com/:w:/r/sites/xf/_layouts/15/Doc.aspx?sourcedoc=%7BB42101F0-D789-49C4-B219-0E59966290AE%7D&file=Rust%20Talk%202023.11.09.docx&action=default&mobileredirect=true" target="_blank" rel="noopener noreferrer">
+								Original script for this presentation
+							</a>
+						</li>
+					</ul>
+					<p>Please request access if you don't have it!</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/highlight/rust.js"></script>
+		<script src="plugin/mermaid/mermaid.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			// noinspection JSUnresolvedReference
+			Reveal.initialize({
+				hash: true,
+				highlight: {
+					beforeHighlight: h => h.registerLanguage("rust", rust)
+				},
+				slideNumber: "c/t",
+
+				mermaid: {
+					theme: "dark",
+					themeVariables: {
+						darkMode: true
+					}
+				},
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMermaid ]
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,16 @@
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+	A["A(1)"]
+	B["B(1)"]
+	C["C(1)"]
+	D["D(1)"]
+	E["E(2)"]
+	F["F(1)"]
+	A -- "`_Rc_`" --> B
+	A -- "`_Rc_`" --> C
+	B -- "`_Rc_`" --> D
+	B -- "`_Rc_`" --> E
+	C -- "`_Rc_`" --> E
+	C -- "`_Rc_`" --> F
+	E:::rust
+	classDef rust color:#FF2C2D

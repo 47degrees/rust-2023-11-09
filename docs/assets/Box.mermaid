@@ -1,0 +1,11 @@
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart LR
+	Box --&gt; Content
+	subgraph stack
+		direction BT
+		Box
+	end
+	subgraph heap
+		direction TB
+		Content
+	end

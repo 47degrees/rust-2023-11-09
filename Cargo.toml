@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "ownership",
+    "double-free",
+    "borrow",
+    "naive-borrow",
+    "sneaky-borrow",
+    "sneaky-borrow-with-lifetime",
+    "concurrent-arc",
+    "concurrent-arc-mutex",
+    "concurrent-rc",
+    "concurrent-rc-in-arc"
+]
+resolver = "2"

@@ -1,0 +1,94 @@
+.rust
+{
+	color: #FFFC2D;
+	text-shadow: 1px 1px 3px #0000F1;
+}
+
+.command
+{
+	color: #71BD2D;
+}
+
+.error
+{
+	color: #F53D4F;
+}
+
+.advice
+{
+	color: #1DA7FE;
+}
+
+.help
+{
+	color: #1EEDFF;
+}
+
+.note
+{
+	color: #46BB14;
+}
+
+.console
+{
+	background-color: black;
+}
+
+.reveal .fragment.fade-left-highlight-red
+{
+	transform: translate(40px, 0);
+}
+
+.reveal .fragment.fade-left-highlight-red.visible
+{
+	color: #ff2c2d;
+	transform: translate(0, 0);
+}
+
+.reveal .fragment.fade-blur
+{
+	filter: blur(8px);
+}
+
+.reveal .fragment.fade-blur.visible
+{
+	filter: none;
+}
+
+.reveal .fragment.major-fade-out
+{
+	opacity: 1;
+	visibility: inherit;
+}
+
+.reveal .fragment.major-fade-out.visible
+{
+	opacity: 0.1;
+	visibility: inherit;
+}
+
+.container-vertical
+{
+	height: 75vh;
+	position: relative;
+}
+
+.vertically-centered
+{
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.container-horizontal
+{
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.reveal pre.mermaid {
+	line-height: 1;
+	box-shadow: none;
+}
