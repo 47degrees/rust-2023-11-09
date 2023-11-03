@@ -8,6 +8,10 @@
       <sourceFolder url="file://$MODULE_DIR$/concurrent-rc-in-arc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/concurrent-rc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sneaky-borrow-with-lifetime/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/borrow/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/concurrent-arc-mutex/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/double-free/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ownership/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/naive-borrow/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
