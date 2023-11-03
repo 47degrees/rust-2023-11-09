@@ -14,7 +14,14 @@ Markdown format.
 The other top-level directories correspond to the various functional and
 (intentionally) nonfunctional code samples used as props for the presentation.
 
+To play the slide deck remotely, just point your favorite web browser
+[here](https://47degrees.github.io/rust-2023-11-09/).
+
 To play the slide deck locally, clone this repository, and enter [docs](/docs).
 Only the first time, you'll need to run: `npm install`. Afterward, you can just
 run: `npm start`. Point your favorite web browser to `localhost:8080`, and
 voilà.
+
+You may want to hit `s` on your keyboard to switch to "speaker viewer", so that
+you can see the transcript while you navigate through the slides at your own
+pace.
