@@ -263,9 +263,9 @@ struct Point3D {
 				<!-- Double free in C. -->
 				<section>
 					<pre><code class="language-cpp" data-trim data-line-numbers data-noescape>
-int* x = (int*) malloc(sizeof(some_struct)); // Allocate
-free(x);                                     // Single free - good
-free(x);                                     // Double free - bad
+int* x = (int*) malloc(sizeof(int)); // Allocate
+free(x);                             // Single free - good
+free(x);                             // Double free - bad
 					</code></pre>
 					<p>C loves double free &mdash; no error 🤦</p>
 				</section>
@@ -377,7 +377,7 @@ fn f&lt;'a, A&gt;(
 						<p>Rules of borrowing:</p>
 						<ul>
 							<li class="fragment">
-								<em class="rust">Either</em> there may be <span class="rust">one</span> mutable burrow</li>
+								<em class="rust">Either</em> there may be <span class="rust">one</span> mutable borrow</li>
 							<li class="fragment">
 								<em class="rust">Or</em> there may be <span class="rust">zero</span> or <span class="rust">many</span>
 								immutable borrows
