@@ -123,7 +123,7 @@ ownership tracking until runtime. There's no escaping the borrow checker, and
 that's a good thing!
 
 Ownership always accompanies introduction of a value. In other words, when code
-mentions a literal or instantiates a struct or enum, some variable, formal
+mentions a literal or instantiates a struct or enum, then some variable, formal
 parameter, field, or temporary becomes the owner of the new value. And the owner
 is responsible for the value's eventual destruction, when the owner goes out of
 scope.

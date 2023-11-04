@@ -67,29 +67,20 @@
 	visibility: inherit;
 }
 
-.container-vertical
-{
-	height: 75vh;
-	position: relative;
-}
-
-.vertically-centered
-{
-	margin: 0;
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-}
-
-.container-horizontal
-{
-	width: 100%;
-	display: flex;
-	justify-content: center;
-}
-
 .reveal pre.mermaid
 {
 	line-height: 1;
 	box-shadow: none;
+}
+
+.row
+{
+	display: flex;
+}
+
+.column
+{
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }

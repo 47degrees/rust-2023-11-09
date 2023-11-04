@@ -338,9 +338,9 @@ fn f&lt;A&gt;(
 						the borrow checker, and that's a good thing!<br>
 
 						Ownership always accompanies introduction of a value. In other words, when code mentions a literal or
-						instantiates a struct or enum, some variable, formal parameter, field, or temporary becomes the owner of the
-						new value. And the owner is responsible for the value's eventual destruction, when the owner goes out of
-						scope.<br>
+						instantiates a struct or enum, then some variable, formal parameter, field, or temporary becomes the owner
+						of the new value. And the owner is responsible for the value's eventual destruction, when the owner goes out
+						of scope.<br>
 
 						But the owner can also delegate that responsibility, by assigning the value to another variable or field or
 						by giving ownership to another function or method. Whenever you see a punctuation-free type annotation on a
@@ -567,7 +567,7 @@ fn f&lt;'a, A&gt;(
 					<div style="margin-left: 50%">
 						<p>Rules of borrowing:</p>
 						<ul>
-							<li class="fragment">
+							<li>
 								<em class="rust">Either</em> there may be <span class="rust">one</span> mutable borrow</li>
 							<li class="fragment">
 								<em class="rust">Or</em> there may be <span class="rust">zero</span> or <span class="rust">many</span>
@@ -603,27 +603,30 @@ fn f&lt;'a, A&gt;(
 						data-auto-animate="naive-borrow"
 						data-background-color="#AD1210"
 				>
-					<div class="container-vertical" style="width: 50%; float: left">
-						<div class="vertically-centered">
-							<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
-fn owner_dropped_while_borrowed() {
-	let outer_borrow: &amp;i32;
-	{
-		let inner_borrow: &amp;i32;
-		let owner: i32 = 10;
-		inner_borrow = &amp;owner;
-		outer_borrow = inner_borrow;
+					<div class="row">
+						<div class="column" style="width: 50%; height: auto">
+							<div>
+								<pre style="font-size: medium"><code class="language-rust" data-trim data-line-numbers data-noescape>
+	fn owner_dropped_while_borrowed() {
+		let outer_borrow: &amp;i32;
+		{
+			let inner_borrow: &amp;i32;
+			let owner: i32 = 10;
+			inner_borrow = &amp;owner;
+			outer_borrow = inner_borrow;
+		}
+		println!("heh, heh = {}", outer_borrow);
 	}
-	println!("heh, heh = {}", outer_borrow);
-}
-							</code></pre>
-							<p>Borrower, schmorrower</p>
+								</code></pre>
+								<p>Borrower, schmorrower</p>
+							</div>
 						</div>
+						<img
+							class="column"
+							src="assets/Snidely%20Whiplash.svg"
+							alt="Snidely Whiplash, trying to break Rust"
+							style="width: 50%; height: auto">
 					</div>
-					<img
-						src="assets/Snidely%20Whiplash.svg"
-						alt="Snidely Whiplash, trying to break Rust"
-						style="width: 50%; height: auto">
 					<aside class="notes">
 						But does it? Does it really? What happens if I do something sneaky, like this? Here, I've nested two scopes.
 						Inside the inner scope is the hapless and doomed owner of the value `10`, as well as the creatively named
@@ -686,10 +689,11 @@ For more information about this error, try `rustc --explain E0597`.
 						data-auto-animate="sneaky-borrow"
 						data-background-color="#AD1210"
 				>
-					<div class="container-vertical" style="width: 50%; float: left">
-						<div class="vertically-centered">
-							<pre style="font-size: medium" data-id="code">
-								<code class="language-rust" data-trim data-line-numbers data-noescape>
+					<div class="row">
+						<div class="column" style="width: 50%; height: auto">
+							<div>
+								<pre style="font-size: medium" data-id="code">
+									<code class="language-rust" data-trim data-line-numbers data-noescape>
 fn assign_through_borrow(
 	a: &amp;mut &amp;i32,
 	b: &amp;mut &amp;i32
@@ -710,15 +714,17 @@ fn owner_dropped_while_borrowed() {
 	}
 	println!("heh, heh = {}", outer_borrow);
 }
-								</code>
-							</pre>
-							<p>Borrower, schmorrower</p>
+									</code>
+								</pre>
+								<p>Borrower, schmorrower</p>
+							</div>
 						</div>
+						<img
+								class="column"
+								src="assets/Snidely%20Whiplash.svg"
+								alt="Snidely Whiplash, trying to break Rust"
+								style="width: 50%; height: auto">
 					</div>
-					<img
-							src="assets/Snidely%20Whiplash.svg"
-							alt="Snidely Whiplash, trying to break Rust"
-							style="width: 50%; height: auto">
 					<aside class="notes">
 						But maybe we can get even more creative, by using an intermediate function call to disguise our perfidy.
 						Here, we've introduced two owners, <code>outer_owner</code> and <code>inner_owner</code>, and initialized
@@ -797,10 +803,11 @@ fn assign_through_borrow(
 						data-auto-animate="sneaky-borrow"
 						data-background-color="#AD1210"
 				>
-					<div class="container-vertical" style="width: 50%; float: left">
-						<div class="vertically-centered">
-							<pre style="font-size: medium" data-id="code">
-								<code class="language-rust" data-trim data-line-numbers data-noescape>
+					<div class="row">
+						<div class="column" style="width: 50%; height: auto">
+							<div>
+								<pre style="font-size: medium" data-id="code">
+									<code class="language-rust" data-trim data-line-numbers data-noescape>
 fn annotated_assign_through_borrow&lt;
 	'a: 'b,
 	'b
@@ -824,15 +831,17 @@ fn owner_dropped_while_borrowed() {
 	}
 	println!("heh, heh = {}", outer_borrow);
 }
-								</code>
-							</pre>
-							<p>Borrower, schmorrower</p>
+									</code>
+								</pre>
+								<p>Borrower, schmorrower</p>
+							</div>
 						</div>
+						<img
+								class="column"
+								src="assets/Snidely%20Whiplash.svg"
+								alt="Snidely Whiplash, trying to break Rust"
+								style="width: 50%; height: auto">
 					</div>
-					<img
-							src="assets/Snidely%20Whiplash.svg"
-							alt="Snidely Whiplash, trying to break Rust"
-							style="width: 50%; height: auto">
 					<aside class="notes">
 						Okay, let's make one last ditch effort to achieve villainy, because I don't know why. We're going to add two
 						lifetime parameters to <code>assign_to_borrow</code>, one for each formal parameter. We'll name the
@@ -1116,10 +1125,11 @@ fn main() {
 						data-auto-animate="concurrent-rc"
 						data-background-color="#AD1210"
 				>
-					<div class="container-vertical" style="width: 50%; float: left">
-						<div class="vertically-centered">
-							<pre style="font-size: medium" data-id="code">
-								<code class="language-rust" data-trim data-line-numbers data-noescape>
+					<div class="row">
+						<div class="column" style="width: 50%; height: auto">
+							<div>
+								<pre style="font-size: medium" data-id="code">
+									<code class="language-rust" data-trim data-line-numbers data-noescape>
 fn main() {
 	let shared: Rc&lt;i32&gt; = Rc::new(10);
 	let copy = Rc::clone(&shared);
@@ -1131,15 +1141,17 @@ fn main() {
 	forked.join().unwrap();
 	println!("main thread: {}", *shared);
 }
-								</code>
-							</pre>
-							<p>Borrower, schmorrower</p>
+									</code>
+								</pre>
+								<p>Borrower, schmorrower</p>
+							</div>
 						</div>
+						<img
+								class="column"
+								src="assets/Snidely%20Whiplash.svg"
+								alt="Snidely Whiplash, trying to break Rust"
+								style="width: 50%; height: auto">
 					</div>
-					<img
-							src="assets/Snidely%20Whiplash.svg"
-							alt="Snidely Whiplash, trying to break Rust"
-							style="width: 50%; height: auto">
 					<aside class="notes">
 						You may be wondering what keeps me from using an <code>Rc</code> with multiple threads, other than a
 						craftsman's desire not to write bad code that breaks a product at runtime. Let's put the supervillain
@@ -1332,10 +1344,11 @@ For more information about this error, try `rustc --explain E0277`.
 						data-auto-animate="concurrent-rc"
 						data-background-color="#AD1210"
 				>
-					<div class="container-vertical" style="width: 50%; float: left">
-						<div class="vertically-centered">
-							<pre style="font-size: medium" data-id="code">
-								<code class="language-rust" data-trim data-line-numbers data-noescape>
+					<div class="row">
+						<div class="column" style="width: 50%; height: auto">
+							<div>
+								<pre style="font-size: medium" data-id="code">
+									<code class="language-rust" data-trim data-line-numbers data-noescape>
 fn main() {
 	let shared: Arc&lt;Rc&lt;i32&gt;&gt; =
 		Arc::new(Rc::new(10));
@@ -1348,15 +1361,17 @@ fn main() {
 	forked.join().unwrap();
 	println!("main thread: {}", **shared);
 }
-								</code>
-							</pre>
-							<p>Borrower, schmorrower</p>
+									</code>
+								</pre>
+								<p>Borrower, schmorrower</p>
+							</div>
 						</div>
+						<img
+								class="column"
+								src="assets/Snidely%20Whiplash.svg"
+								alt="Snidely Whiplash, trying to break Rust"
+								style="width: 50%; height: auto">
 					</div>
-					<img
-							src="assets/Snidely%20Whiplash.svg"
-							alt="Snidely Whiplash, trying to break Rust"
-							style="width: 50%; height: auto">
 					<aside class="notes">
 						Okay, let's try one more technique to cheat the compiler. Maybe we can embed an <code>Rc</code> within an
 						<code>Arc</code> in order to bypass Rust's borrow checker.<br>
