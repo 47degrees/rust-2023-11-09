@@ -25,3 +25,8 @@ voilà.
 You may want to hit `s` on your keyboard to switch to "speaker viewer", so that
 you can see the transcript while you navigate through the slides at your own
 pace.
+
+The final recording of the presentation — complete with a few notable naming
+errors, as well as a big dummy forgetting how to say "hashtag" — is available
+[here](https://www.dropbox.com/s/pdtpdrhgpk0z8z9/Rust%20Talk%202023-11-09.mp4?dl=0).
+It's about 532MB, lasting 26m24s.
